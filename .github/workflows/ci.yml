@@ -1,0 +1,127 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Home Assistant ${{ matrix.homeassistant }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      matrix:
+        include:
+          - python: "3.13"
+            homeassistant: "2026.2.3"
+          - python: "3.14"
+            homeassistant: "2026.10.0"
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: ${{ matrix.python }}
+          cache: pip
+          cache-dependency-path: pyproject.toml
+
+      - name: Install development dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev]" "homeassistant==${{ matrix.homeassistant }}"
+
+      - name: Check formatting
+        run: ruff format --check .
+
+      - name: Lint
+        run: ruff check --output-format=github .
+
+      - name: Validate Python and JSON files
+        run: |
+          python -m compileall -q custom_components tests
+          for file in \
+            hacs.json \
+            release-please-config.json \
+            .release-please-manifest.json \
+            custom_components/navidrome_nowplaying/manifest.json \
+            custom_components/navidrome_nowplaying/strings.json \
+            custom_components/navidrome_nowplaying/translations/en.json \
+            custom_components/navidrome_nowplaying/translations/de.json
+          do
+            python -m json.tool "$file" >/dev/null
+          done
+
+      - name: Run tests
+        run: >-
+          pytest
+          --cov=custom_components.navidrome_nowplaying
+          --cov-report=term-missing
+          --cov-fail-under=80
+          -q
+
+      - name: Package Home Assistant integration
+        run: |
+          mkdir -p dist
+          (cd custom_components && zip -r ../dist/navidrome_nowplaying.zip navidrome_nowplaying -x '*__pycache__*' '*.pyc')
+          zip -j dist/navidrome_nowplaying.zip LICENSE README.md
+
+      - name: Upload Home Assistant artifact
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: home-assistant-integration-${{ matrix.homeassistant }}
+          path: dist/navidrome_nowplaying.zip
+          if-no-files-found: error
+
+  navidrome:
+    name: Navidrome test and WASM build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: navidrome-plugin
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up Go
+        uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
+        with:
+          go-version-file: navidrome-plugin/go.mod
+          cache-dependency-path: navidrome-plugin/go.sum
+
+      - name: Check formatting
+        run: test -z "$(gofmt -l .)"
+
+      - name: Check build script shell syntax
+        run: sh -n build.sh
+
+      - name: Test and vet
+        run: make test
+
+      - name: Check race safety
+        run: go test -race ./...
+
+      - name: Build and verify package
+        run: make all verify
+
+      - name: Build and verify Docker package
+        run: |
+          ./build.sh
+          python3 verify_package.py ../build/navidrome-plugin/navidrome-nowplaying.ndp
+
+      - name: Upload Navidrome artifact
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: navidrome-plugin
+          path: build/navidrome-plugin/navidrome-nowplaying.ndp
+          if-no-files-found: error

@@ -1,0 +1,31 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Navidrome push",
+        "description": "Enter the Home Assistant URL reachable from Navidrome. Existing account credentials are removed when switching to push.",
+        "data": {
+          "ha_base_url": "Home Assistant base URL"
+        }
+      },
+      "reconfigure": {
+        "title": "Navidrome push",
+        "description": "Enter the Home Assistant URL reachable from Navidrome. Existing account credentials are removed when switching to push.",
+        "data": {
+          "ha_base_url": "Home Assistant base URL",
+          "rotate_secret": "Generate a new pairing secret"
+        }
+      },
+      "pairing": {
+        "title": "Pair Navidrome",
+        "description": "Push URL: {push_url}\n\nDedicated secret: {secret}\n\nCopy these into the Navidrome plugin. Select Finish before enabling the plugin. The entity stays unavailable until the first accepted snapshot."
+      }
+    },
+    "error": {
+      "invalid_url": "Enter a valid http(s) URL without credentials, query parameters, or a fragment."
+    },
+    "abort": {
+      "reconfigure_successful": "Navidrome settings were updated."
+    }
+  }
+}

@@ -1,0 +1,2 @@
+/dist/
+# Native and Docker outputs live in the root /build/ directory (ignored there).

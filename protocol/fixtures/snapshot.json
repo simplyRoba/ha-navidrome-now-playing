@@ -1,0 +1,23 @@
+{
+  "version": 2,
+  "instance_id": "fixture-instance",
+  "sequence": 1,
+  "snapshot_at": "2025-01-01T12:00:00Z",
+  "selection_status": "selected",
+  "matching_stream_count": 1,
+  "filters": {"playback_username": null, "player_name": null},
+  "selected_stream": {
+    "id": "song-1",
+    "title": "Example song",
+    "artist": "Example artist",
+    "album": "Example album",
+    "duration": 180,
+    "coverArt": "al-1",
+    "username": "alice",
+    "playerId": "phone",
+    "playerName": "Yuzic",
+    "state": "playing",
+    "positionMs": 45000,
+    "playbackRate": 1
+  }
+}
