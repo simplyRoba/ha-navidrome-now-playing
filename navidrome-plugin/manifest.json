@@ -1,34 +1,88 @@
 {
   "name": "Home Assistant Now Playing",
   "author": "ha-navidrome-now-playing contributors",
-  "version": "0.4.1",
+  "version": "0.5.0",
   "description": "Select authorized playback and push its state and artwork to Home Assistant.",
   "permissions": {
-    "users": {"reason": "Receive playback reports for explicitly assigned users"},
-    "subsonicapi": {"reason": "Resolve selected track artwork internally as an assigned user"},
-    "http": {"reason": "Push to the user-configured Home Assistant LAN or HTTPS address", "requiredHosts": ["*"]},
-    "cache": {"reason": "Keep a bounded snapshot and delivery session between stateless invocations"},
-    "kvstore": {"reason": "Persist bounded, expiring playback reports per stable player identity", "maxSize": "2MB"},
-    "scheduler": {"reason": "Coalesce event delivery, serialize sends, retry failures and send 90-second heartbeats"}
+    "users": {
+      "reason": "Receive playback reports for explicitly assigned users"
+    },
+    "subsonicapi": {
+      "reason": "Resolve selected track artwork internally as an assigned user"
+    },
+    "http": {
+      "reason": "Push to the user-configured Home Assistant LAN or HTTPS address",
+      "requiredHosts": [
+        "*"
+      ]
+    },
+    "cache": {
+      "reason": "Keep a bounded snapshot and delivery session between stateless invocations"
+    },
+    "kvstore": {
+      "reason": "Persist bounded, expiring playback reports per stable player identity",
+      "maxSize": "2MB"
+    },
+    "scheduler": {
+      "reason": "Coalesce event delivery, serialize sends, retry failures and send 90-second heartbeats"
+    }
   },
   "config": {
     "schema": {
       "type": "object",
       "properties": {
-        "push_url": {"type": "string", "title": "Push URL", "description": "Full Home Assistant receiver URL: http(s)://host:port/api/navidrome_nowplaying/<receiver_id>", "minLength": 1},
-        "secret": {"type": "string", "title": "Secret", "description": "The shared secret from the Home Assistant push integration", "minLength": 1},
-        "playback_username": {"type": "string", "title": "Playback username (optional)", "description": "Select only this exact assigned username. Leave empty to select across assigned users.", "maxLength": 4096},
-        "player_name": {"type": "string", "title": "Player name (optional)", "description": "Select only this exact player name. Applied together with the username filter; leave empty for all players.", "maxLength": 4096}
+        "push_url": {
+          "type": "string",
+          "title": "Push URL",
+          "description": "Full Home Assistant receiver URL: http(s)://host:port/api/navidrome_nowplaying/<receiver_id>",
+          "minLength": 1
+        },
+        "secret": {
+          "type": "string",
+          "title": "Secret",
+          "description": "The shared secret from the Home Assistant push integration",
+          "minLength": 1
+        },
+        "playback_username": {
+          "type": "string",
+          "title": "Playback username (optional)",
+          "description": "Select only this exact assigned username. Leave empty to select across assigned users.",
+          "maxLength": 4096
+        },
+        "player_name": {
+          "type": "string",
+          "title": "Player name (optional)",
+          "description": "Select only this exact player name. Applied together with the username filter; leave empty for all players.",
+          "maxLength": 4096
+        }
       },
-      "required": ["push_url", "secret"]
+      "required": [
+        "push_url",
+        "secret"
+      ]
     },
     "uiSchema": {
       "type": "VerticalLayout",
       "elements": [
-        {"type": "Control", "scope": "#/properties/push_url"},
-        {"type": "Control", "scope": "#/properties/secret", "options": {"format": "password"}},
-        {"type": "Control", "scope": "#/properties/playback_username"},
-        {"type": "Control", "scope": "#/properties/player_name"}
+        {
+          "type": "Control",
+          "scope": "#/properties/push_url"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/secret",
+          "options": {
+            "format": "password"
+          }
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/playback_username"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/player_name"
+        }
       ]
     }
   }

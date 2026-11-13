@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ha-navidrome-now-playing"
-version = "0.4.1"
+version = "0.5.0"
 description = "Push-based read-only Navidrome now-playing media player for Home Assistant"
 readme = "README.md"
 requires-python = ">=3.13"
