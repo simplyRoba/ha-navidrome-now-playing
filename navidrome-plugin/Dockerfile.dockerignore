@@ -1,0 +1,10 @@
+# Allow only plugin build inputs from the repository-root context.
+**
+!navidrome-plugin/
+!navidrome-plugin/go.mod
+!navidrome-plugin/go.sum
+!navidrome-plugin/*.go
+!navidrome-plugin/manifest.json
+!navidrome-plugin/cmd/
+!navidrome-plugin/cmd/**/
+!navidrome-plugin/cmd/**/*.go

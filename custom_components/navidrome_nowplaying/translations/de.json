@@ -1,0 +1,31 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Navidrome-Push",
+        "description": "Gib die Home-Assistant-URL ein, die Navidrome erreichen kann. Beim Wechsel zu Push werden vorhandene Kontozugangsdaten entfernt.",
+        "data": {
+          "ha_base_url": "Home-Assistant-Basis-URL"
+        }
+      },
+      "reconfigure": {
+        "title": "Navidrome-Push",
+        "description": "Gib die Home-Assistant-URL ein, die Navidrome erreichen kann. Beim Wechsel zu Push werden vorhandene Kontozugangsdaten entfernt.",
+        "data": {
+          "ha_base_url": "Home-Assistant-Basis-URL",
+          "rotate_secret": "Neues Kopplungsgeheimnis erzeugen"
+        }
+      },
+      "pairing": {
+        "title": "Navidrome koppeln",
+        "description": "Push-URL: {push_url}\n\nKopplungsgeheimnis: {secret}\n\nKopiere diese Werte in das Navidrome-Plugin. Wähle Fertig, bevor du das Plugin aktivierst. Die Entität bleibt bis zum ersten akzeptierten Snapshot nicht verfügbar."
+      }
+    },
+    "error": {
+      "invalid_url": "Gib eine gültige HTTP(S)-URL ohne Zugangsdaten, Abfrageparameter oder Fragment ein."
+    },
+    "abort": {
+      "reconfigure_successful": "Die Navidrome-Einstellungen wurden aktualisiert."
+    }
+  }
+}

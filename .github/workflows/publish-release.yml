@@ -1,0 +1,112 @@
+name: Publish Release
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Ref to build and verify without publishing
+        required: true
+        default: main
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: publish-release-${{ github.event.release.tag_name || inputs.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build and verify Navidrome plugin
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      GOFLAGS: -mod=readonly
+    steps:
+      - name: Check out release source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event_name == 'release' && format('refs/tags/{0}', github.event.release.tag_name) || inputs.ref }}
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.13"
+
+      - name: Check release versions
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          import tomllib
+          from pathlib import Path
+
+          versions = {
+              "project": tomllib.loads(Path("pyproject.toml").read_text())["project"]["version"],
+              "ha": json.loads(Path("custom_components/navidrome_nowplaying/manifest.json").read_text())["version"],
+              "plugin": json.loads(Path("navidrome-plugin/manifest.json").read_text())["version"],
+              "release": json.loads(Path(".release-please-manifest.json").read_text())["."],
+          }
+          if any(not isinstance(value, str) or not value for value in versions.values()):
+              raise SystemExit("Release versions must be nonempty strings")
+          if len(set(versions.values())) != 1:
+              raise SystemExit(f"Component versions do not match: {versions}")
+          version = versions["project"]
+          tag = os.environ.get("RELEASE_TAG", "")
+          if tag and tag != f"v{version}":
+              raise SystemExit(f"Release tag {tag} does not match component version {version}")
+          print(f"Verified component version {version}")
+          PY
+
+      - name: Set up Go
+        uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
+        with:
+          go-version-file: navidrome-plugin/go.mod
+          cache-dependency-path: navidrome-plugin/go.sum
+
+      - name: Test and vet
+        run: make -C navidrome-plugin test
+
+      - name: Check race safety
+        working-directory: navidrome-plugin
+        run: go test -race ./...
+
+      - name: Build and verify package
+        run: make -C navidrome-plugin all verify
+
+      - name: Upload verified build
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: navidrome-plugin-release
+          path: build/navidrome-plugin/navidrome-nowplaying.ndp
+          if-no-files-found: error
+
+  publish:
+    name: Attach Navidrome plugin
+    if: github.event_name == 'release'
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - name: Download verified build
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: navidrome-plugin-release
+          path: release-artifacts
+
+      - name: Upload plugin to existing release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: >-
+          gh release upload "$RELEASE_TAG"
+          release-artifacts/navidrome-nowplaying.ndp
+          --repo "$GITHUB_REPOSITORY"
